@@ -20,20 +20,48 @@ login_manager.login_view = "login"
 
 @login_manager.user_loader
 def load_user(user_id):
+    '''takes in user id and returns the user from the database'''
     return User.query.get(int(user_id))
 
 class LoginForm(FlaskForm):
+    '''
+    A class to represent the login form
+    Attributes
+    ------------
+    username: StringField
+        Input required, Length 4-20
+
+    Password:PasswordField
+        Input required, length 4-20
+
+    Submit: SubmitField
+    '''
     username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder":"Username"})
     password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder":"Password"})
     submit = SubmitField('Login')
 
 
 class RegisterForm(FlaskForm):
+    '''
+    A class to represent the registration form
+    Attributes
+    ------------
+    username: StringField
+        Input required, Length 4-20
+        
+    Password:PasswordField
+        Input required, length 4-20
+
+    Submit: SubmitField
+    '''
     username = StringField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder":"Username"})
     password = PasswordField(validators=[InputRequired(), Length(min=4, max=20)], render_kw={"placeholder":"Password"})
     submit = SubmitField('Register')
 
     def validate_username(self,username):
+        '''
+        Takes in a username, raises validation error if username is taken
+        '''
         existing_user_username = User.query.filter_by(
             username=username.data).first()
 
@@ -45,15 +73,33 @@ class RegisterForm(FlaskForm):
             
         
 class User(db.Model, UserMixin):
+    '''
+    Class to represent the the a user in the database
+    Attributes
+    ------------
+    id: Column
+        Integer, primary key
+        
+    username:Column
+        String, not nullable, unique
+
+    password: Column
+        String not nullable  
+    '''
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(20), nullable=False, unique = True)
     password = db.Column(db.String(80), nullable = False)
+
+
 @app.route('/')
 def home():
     return render_template('home.html')
 
 @app.route('/login', methods = ['GET', 'POST'])
 def login():
+    '''
+    Handles logging in and direct to the dashboard page if logging in is successful
+    '''
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -68,16 +114,19 @@ def login():
 @app.route('/dashboard', methods = ['GET', 'POST'])
 @login_required
 def dashboard():
+    '''Handles the dashboard page'''
     return render_template('dashboard.html')
 
 @app.route('/logout', methods= ['GET', 'POST'])
 @login_required
 def logout():
+    '''Handles logging out and directs to login page'''
     logout_user()
     return redirect(url_for('login'))  
 
 @app.route('/register', methods = ['GET', 'POST'])
 def register():
+    '''Handles registration and directs to login page upon registration'''
     form = RegisterForm()
 
     if form.validate_on_submit():
